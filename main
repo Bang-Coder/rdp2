@@ -1,0 +1,35 @@
+name: Windows - LiteManager
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Start Building...
+    runs-on: windows-latest
+    timeout-minutes: 360 # 6 hours maximum duration
+
+    steps:
+      - name: Downloading & Installing Essentials
+        run: |
+          Invoke-WebRequest -Uri "https://gitlab.com/chamod12/lm_win-10_github_rdp/-/raw/main/Downloads.bat" -OutFile "Downloads.bat"
+          cmd /c Downloads.bat
+
+      - name: Connect to LiteManager
+        run: cmd /c show.bat
+
+      - name: Time Counter
+        run: cmd /c loop.bat
+
+      - name: Schedule Next Run
+        run: |
+          $headers = @{
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            Accept = "application/vnd.github+json"
+          }
+          $body = @{
+            event_type = "workflow_dispatch"
+          } | ConvertTo-Json -Depth 10
+          Invoke-RestMethod -Uri "https://api.github.com/repos/${{ github.repository }}/dispatches" -Method POST -Headers $headers -Body $body
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
